@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pickle
 import pandas as pd
 import requests
@@ -34,6 +35,13 @@ page_bg_img = """
             background-image: url("https://user-images.githubusercontent.com/33485020/108069438-5ee79d80-7089-11eb-8264-08fdda7e0d11.jpg");
             background-size: cover;
         }
+        [data-testid="stImage"]{
+            border: 5px solid red;
+            border-radius: 15px;
+        }
+        [data-testid="stTest"]{
+            font-family: Arial, Helvetica, sans-serif
+        }
         #movie-recommendation-system{
         color:red;
         background-color:rgba(0,0,0,0.7);
@@ -43,6 +51,7 @@ page_bg_img = """
        }*/
         </style>
         """
+
 st.title('Movie Recommendation System')
 movie_watched = st.selectbox(
     'What movie have you watched?',
@@ -51,25 +60,12 @@ movie_watched = st.selectbox(
 
 if st.button('Recommend', type='primary'):
     names, posters = recommend(movie_watched)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    try:
-        with col1:
-            st.text(names[0])
-            st.image(posters[0])
-        with col2:
-            st.text(names[1])
-            st.image(posters[1])
-        with col3:
-            st.text(names[2])
-            st.image(posters[2])
-        with col4:
-            st.text(names[3])
-            st.image(posters[3])
-        with col5:
-            st.text(names[4])
-            st.image(posters[4])
-    except:
-        pass
+    for index, (name, poster) in enumerate(zip(names, posters)):
+        try:
+            st.header(name)
+            st.image(poster)
+        except:
+            pass
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
