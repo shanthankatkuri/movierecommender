@@ -2,10 +2,20 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pickle
 import pandas as pd
+import re
 import requests
 movies_dict = pickle.load(open('movie_dict.pkl', 'rb'))
 movies = pd.DataFrame(movies_dict)
 similarity = pickle.load(open('similarity.pkl', 'rb'))
+
+def convert_to_url_friendly(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Replace spaces with hyphens
+    text = text.replace(' ', '-')
+    # Remove any characters that are not letters, numbers, or hyphens
+    text = re.sub(r'[^a-z0-9-]', '', text)
+    return text
 
 def fetch_poster(movie_id):
     response = requests.get(f'https://api.themoviedb.org/3/movie/{movie_id}?api_key=e9da140da37eaa85f480a34d0effa4b8')
@@ -19,14 +29,16 @@ def recommend(movie):
 
     recommended_movies = []
     recommended_movie_posters = []
+    recommended_movies_ids = []
     for i in movies_list:
         movie_id = movies.iloc[i[0]].id
         try:
             recommended_movie_posters.append(fetch_poster(movie_id))
             recommended_movies.append(movies.iloc[i[0]].title)
+            recommended_movies_ids.append(movie_id)
         except:
             pass
-    return recommended_movies, recommended_movie_posters
+    return recommended_movies, recommended_movie_posters, recommended_movies_ids
 
 
 page_bg_img = """
@@ -39,16 +51,10 @@ page_bg_img = """
             border: 5px solid red;
             border-radius: 15px;
         }
-        [data-testid="stTest"]{
-            font-family: Arial, Helvetica, sans-serif
-        }
         #movie-recommendation-system{
         color:red;
         background-color:rgba(0,0,0,0.7);
         }
-       /*[data-testid="stMarkdownContainer"]{
-       background-color:rgba(0,0,0,0.7);
-       }*/
         </style>
         """
 
@@ -59,11 +65,16 @@ movie_watched = st.selectbox(
 )
 
 if st.button('Recommend', type='primary'):
-    names, posters = recommend(movie_watched)
-    for index, (name, poster) in enumerate(zip(names, posters)):
+    names, posters, ids = recommend(movie_watched)
+    for index, (name, poster,id) in enumerate(zip(names, posters, ids)):
+        title_url = convert_to_url_friendly(name)
+        target_link = f"https://www.themoviedb.org/movie/{id}-{title_url}"
+        # print(title_url)
+        # print(target_link)
         try:
             st.header(name)
-            st.image(poster)
+            # st.image(poster)
+            st.markdown(f'<a href="{target_link}" target="_blank"><img src="{poster}" alt="Clickable Image" style="border:5px solid red; border-radius:15px; width:300px;"></a>', unsafe_allow_html=True)
         except:
             pass
 
